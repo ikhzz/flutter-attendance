@@ -1,12 +1,17 @@
-import 'package:attendance_app2/services/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:attendance_app2/services/auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-class UserMenu extends StatelessWidget {
+class AdminMenu extends StatefulWidget {
+  @override
+  _AdminMenuState createState() => _AdminMenuState();
+}
+
+class _AdminMenuState extends State<AdminMenu> {
 
   final AuthService _auth = AuthService();
   final Future<FirebaseApp> defaultapp = Firebase.initializeApp();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +25,7 @@ class UserMenu extends StatelessWidget {
                 await _auth.signOut();
               },
             ),
-          Text('User_menu')
+          Text('Admin Menu')
         ],
       ),
     );
