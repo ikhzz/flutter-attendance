@@ -14,7 +14,6 @@ class _SignInState extends State<SignIn> {
   String email = '';
   String pass = '';
   String errMsg = '';
-  dynamic result;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +31,7 @@ class _SignInState extends State<SignIn> {
               Text(
                 "ABSENSI PEGAWAI BKPSDMD",
                 style: TextStyle(
+                  fontSize: 22.0,
                   color: Colors.white),
                 ),
               SizedBox(height: 30.0),
@@ -40,29 +40,42 @@ class _SignInState extends State<SignIn> {
                 style: TextStyle(
                   color: Colors.white),
                 ),
-              SizedBox(height: 40.0),
+              SizedBox(height: 35.0),
               Container(
-                width: 200.0,
+                width: 220.0,
+                height: 30.0,
                 child: TextFormField(
                   validator: (val) => val.isEmpty ? 'Masukan Email Pegawai' : null,
-                  onChanged: (val){ setState(() => email = val); },  
-                  )
-                ),
+                  onChanged: (val){ setState(() => email = val); },
+                  decoration: InputDecoration(
+                    hintText: 'Email Pegawai',
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                  ),
+                  style: TextStyle(color: Colors.white),  
+                )
+              ),
+              SizedBox(height: 30.0),
               Container(
-                width: 200.0,
+                width: 220.0,
+                height: 30.0,
                 child: TextFormField(
                   validator: (val) => val.length < 6 ? 'Masukan Password Lebih dari 6 karakter' : null,
                   onChanged: (val){ setState(() => pass = val); },
+                  decoration: InputDecoration(
+                    hintText: 'Password Pegawai',
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                  ),
+                  style: TextStyle(color: Colors.white),  
                   )
                 ),
               SizedBox(height: 20.0),
               RaisedButton(
                 onPressed: () async{
                   if(_formkey.currentState.validate()) {
-                    result = await _auth.signIn(email, pass);
+                    dynamic result = await _auth.signIn(email, pass);
                     if(result == null){
                       setState(() {
-                        errMsg = "Email dan Password Salah";
+                        errMsg = "Email Atau Password Salah";
                       });
                     } else{
                       print('login');
@@ -84,34 +97,9 @@ class _SignInState extends State<SignIn> {
                   color: Colors.red, fontSize: 14.0
                 ),
               ),
-              SizedBox(height: 20.0),
-              RaisedButton(
-                onPressed: ()async{
-                  await _auth.level(result.uid);
-                },
-                color: Color.fromRGBO(154, 178, 245, 1),
-                child: Text(
-                  'Request', 
-                  style: TextStyle(
-                    color: Colors.white
-                    ),
-                  ),
-                ),
-              SizedBox(height: 20.0),
-              RaisedButton(
-                onPressed: () async {
-                  await _auth.signOut();
-                  },
-                color: Color.fromRGBO(154, 178, 245, 1),
-                child: Text(
-                  'Sign Out', 
-                  style: TextStyle(
-                    color: Colors.white
-                    ),
-                  ),
-                ),
-            ],),
+            ],
           ),
+        ),
       )
     );
   }
