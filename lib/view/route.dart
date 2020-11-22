@@ -17,7 +17,6 @@ class AppRoutes extends StatelessWidget {
       return FutureBuilder(
         future: _auth.level(user.uid),
         builder: (context, snapshot) {
-          print(snapshot.data);
           if (snapshot.connectionState == ConnectionState.done) {
             if(snapshot.data == 'admin'){
               return AdminMenu();

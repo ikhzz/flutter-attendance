@@ -5,7 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 class AuthService {
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseDatabase _db = FirebaseDatabase.instance;
+  final FirebaseDatabase db = FirebaseDatabase.instance;
   
   // Extract uid
   AppUser _uidUser(User user) {
@@ -42,7 +42,7 @@ class AuthService {
 
   // Query level
   Future level(String uid) async {
-    return await _db.reference()
+    return await db.reference()
     .child('profile/$uid/level')
     .once()
     .then((snapshot) => snapshot.value);
