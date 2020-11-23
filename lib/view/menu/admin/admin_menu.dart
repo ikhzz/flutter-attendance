@@ -1,8 +1,8 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance_app2/services/auth.dart';
 import 'package:ntp/ntp.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AdminMenu extends StatefulWidget {
   @override
@@ -15,10 +15,11 @@ class _AdminMenuState extends State<AdminMenu> {
   
   String _date;
   String _time;
-  DatabaseReference _ref;
+  String _dates;
   
   void getTime() async {
     DateTime date = await NTP.now();
+    
     setState(() {
       String z = '0';
       String day = date.day.toString().length < 2 ? z+date.day.toString(): date.day.toString();
@@ -27,8 +28,14 @@ class _AdminMenuState extends State<AdminMenu> {
       String minute = date.minute.toString().length < 2 ? z+date.minute.toString(): date.minute.toString();
       
       _date = '$day-$month-${date.year}';
-      _time = '$hour-$minute';
-      _ref = _auth.db.reference().child('presence/$_date/Pagi');
+      _time = '$hour:$minute';
+      if(date.hour > 5 && date.hour < 11 ){
+        _dates = 'Pagi';
+      } else if(date.hour > 10 && date.hour < 14){
+        _dates  = 'Siang';
+      } else if(date.hour > 13 && date.hour < 19){
+        _dates = 'Sore';
+      }
     });
     
   }
@@ -36,7 +43,7 @@ class _AdminMenuState extends State<AdminMenu> {
   @override
   void initState(){
     super.initState();
-    getTime();
+    getTime(); 
   }
 
   @override
@@ -82,7 +89,7 @@ class _AdminMenuState extends State<AdminMenu> {
       ),
       resizeToAvoidBottomInset: false,
       body: Container(
-        alignment: Alignment.center,
+        //alignment: Alignment.center,
         child: Column(
           children: [
             SizedBox(height: 5.0),
@@ -97,21 +104,46 @@ class _AdminMenuState extends State<AdminMenu> {
               ],
             ),
             SizedBox(height: 20.0),
-            Flexible(
-              child: FirebaseAnimatedList(
-                query: _ref,
-                itemBuilder: (context, snapshot, animation, index) {
-                  return Card(
-                    child: Column(
-                      children: [
-                        Text('tes'),
-                        Text(snapshot.value['name']?? 'tes')
-                      ],
-                    ) 
+            Text(_dates ?? 'Bukan Jam Absen'),
+            SizedBox(height: 20.0),
+            FutureBuilder(
+              future: _auth.ref(),
+              builder: (context,snapshot){
+                if(snapshot.data != null){
+                  return Flexible(
+                    child: FirebaseAnimatedList(
+                      query: snapshot.data,
+                      itemBuilder: (context, snapshot, animation, index){
+                        var ref = _auth.storage.ref('presence').child('09-11-2020/Siang/${snapshot.key}');
+                        return Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Nama            : ${snapshot.value['name']}'),
+                                SizedBox(height:15.0),
+                                Text('Jam Absen   : ${snapshot.value['time']}'),
+                                FutureBuilder(
+                                  future: ref.getDownloadURL(),
+                                  builder: (context, snapshot) {
+                                    if(snapshot.data != null){
+                                      return Image.network(snapshot.data);
+                                    }
+                                    return Text('tes');
+                                  },
+                                )
+                              ],
+                            ),
+                          ) 
+                        );
+                      },
+                    ),
                   );
-                },
-              )
-            ),
+                }
+                return Text('Menggambil Data');
+              },
+            )
           ],
         ),
       ),
