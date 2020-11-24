@@ -1,8 +1,10 @@
+import 'package:attendance_app2/services/db.dart';
+import 'package:attendance_app2/services/storage.dart';
+import 'package:attendance_app2/view/other/preview.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance_app2/services/auth.dart';
 import 'package:ntp/ntp.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class AdminMenu extends StatefulWidget {
   @override
@@ -12,6 +14,8 @@ class AdminMenu extends StatefulWidget {
 class _AdminMenuState extends State<AdminMenu> {
 
   final AuthService _auth = AuthService();
+  final DbService _db = DbService();
+  final StorageService _storage = StorageService();
   
   String _date;
   String _time;
@@ -43,7 +47,7 @@ class _AdminMenuState extends State<AdminMenu> {
   @override
   void initState(){
     super.initState();
-    getTime(); 
+    getTime();
   }
 
   @override
@@ -62,19 +66,38 @@ class _AdminMenuState extends State<AdminMenu> {
                 decoration: BoxDecoration(
                   color: Colors.blue,
                 ),
-                child: CircleAvatar()
+                child: FutureBuilder(
+                  future: _storage.getprofile(),
+                  builder: (context, snapshot) {
+                    if(snapshot.data != null) {
+                      return CircleAvatar(
+                        backgroundImage: NetworkImage(snapshot.data),
+                      );
+                    }
+                    return CircleAvatar();
+                  },
+                ),
               ),
               ListTile(
                 leading: Icon(Icons.contact_page),
                 title: Text('Tambah Pengguna'),
+                onTap: (){
+                  Navigator.pushNamed(context, '/register');
+                },
               ),
               ListTile(
                 leading: Icon(Icons.lock_open),
                 title: Text('Lupa Password'),
+                onTap: (){
+                  Navigator.pushNamed(context, '/resetpass');
+                },
               ),
               ListTile(
                 leading: Icon(Icons.analytics),
                 title: Text('History Absen'),
+                onTap: (){
+                  Navigator.pushNamed(context, '/history');
+                },
               ),
               ListTile(
                 leading: Icon(Icons.logout),
@@ -107,32 +130,52 @@ class _AdminMenuState extends State<AdminMenu> {
             Text(_dates ?? 'Bukan Jam Absen'),
             SizedBox(height: 20.0),
             FutureBuilder(
-              future: _auth.ref(),
+              future: _db.ref(),
               builder: (context,snapshot){
                 if(snapshot.data != null){
                   return Flexible(
                     child: FirebaseAnimatedList(
                       query: snapshot.data,
                       itemBuilder: (context, snapshot, animation, index){
-                        var ref = _auth.storage.ref('presence').child('09-11-2020/Siang/${snapshot.key}');
                         return Card(
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Text('Nama            : ${snapshot.value['name']}'),
-                                SizedBox(height:15.0),
-                                Text('Jam Absen   : ${snapshot.value['time']}'),
                                 FutureBuilder(
-                                  future: ref.getDownloadURL(),
+                                  future: _storage.getImage('09-11-2020', 'Siang', snapshot.key),
                                   builder: (context, snapshot) {
                                     if(snapshot.data != null){
-                                      return Image.network(snapshot.data);
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: GestureDetector(
+                                          onTap: (){
+                                            Navigator.push(context, MaterialPageRoute(builder: (_){
+                                              
+                                              return Preview(data: snapshot.data);
+                                            }));
+                                          },
+                                            child: Image(
+                                              image: NetworkImage(snapshot.data),
+                                              height: 100.0,
+                                            ),
+                                        ),
+                                      );
                                     }
-                                    return Text('tes');
+                                    return CircleAvatar(
+                                      radius: 40.0,
+                                    );
                                   },
-                                )
+                                ),
+                                SizedBox(width: 20.0),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Nama            : ${snapshot.value['name']}'),
+                                    SizedBox(height:15.0),
+                                    Text('Jam Absen   : ${snapshot.value['time']}'),
+                                  ],
+                                ),
                               ],
                             ),
                           ) 
