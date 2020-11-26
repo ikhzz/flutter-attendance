@@ -13,7 +13,7 @@ class _ResetPassState extends State<ResetPass> {
         title: Text('Reset Pass'),
       ),
       body: Center(
-        child: Text('Reset Pass')
+        child: Text('Belum di Buat')
       ),
     );
   }

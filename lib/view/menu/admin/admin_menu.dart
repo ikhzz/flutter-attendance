@@ -13,13 +13,16 @@ class AdminMenu extends StatefulWidget {
 
 class _AdminMenuState extends State<AdminMenu> {
 
+  
   final AuthService _auth = AuthService();
   final DbService _db = DbService();
   final StorageService _storage = StorageService();
+  final _scaffold = GlobalKey<ScaffoldState>();
   
   String _date;
   String _time;
   String _dates;
+  String data;
   
   void getTime() async {
     DateTime date = await NTP.now();
@@ -53,6 +56,7 @@ class _AdminMenuState extends State<AdminMenu> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffold,
       appBar: AppBar(
         title: Text('Admin Menu'),
       ),
@@ -81,8 +85,10 @@ class _AdminMenuState extends State<AdminMenu> {
               ListTile(
                 leading: Icon(Icons.contact_page),
                 title: Text('Tambah Pengguna'),
-                onTap: (){
-                  Navigator.pushNamed(context, '/register');
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  var result = await Navigator.pushNamed(context, '/register');
+                  nyam(result);
                 },
               ),
               ListTile(
@@ -151,7 +157,6 @@ class _AdminMenuState extends State<AdminMenu> {
                                         child: GestureDetector(
                                           onTap: (){
                                             Navigator.push(context, MaterialPageRoute(builder: (_){
-                                              
                                               return Preview(data: snapshot.data);
                                             }));
                                           },
@@ -191,5 +196,10 @@ class _AdminMenuState extends State<AdminMenu> {
         ),
       ),
     );
+  }
+
+  void nyam(String msg){
+    
+    _scaffold.currentState.showSnackBar(SnackBar(content:Text(msg)));
   }
 }

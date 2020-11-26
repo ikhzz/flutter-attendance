@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:ntp/ntp.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -35,12 +37,31 @@ class DbService {
     return [dates,time];
   }
 
-  Future createUser(String id, String name) async {
+  Future createUser(String id, String name, String pass) async {
     if(id != null) {
       await _db.reference().child('profile').child(id).set({
         'name': name,
-        'lavel': 'user'
+        'lavel': 'user',
+        'pass' : pass
       });
     }
+  }
+
+  Future history() async {
+    List list;
+    var a = await _db.reference()
+      .child('presence')
+      .once()
+      .then((value) => value);
+    //Map b = jsonDecode(a.value); 
+
+    print(a.toString());
+    // for(var i in a.value){
+    //   list.add(i);
+    // }
+    var b = a.value.keys.toList();
+    var c = a.value.values.toList();
+    var d = c[0].values.toList();
+    return b;
   }
 }

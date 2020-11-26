@@ -69,7 +69,7 @@ class _SignInState extends State<SignIn> {
                   )
                 ),
               SizedBox(height: 20.0),
-              RaisedButton(
+              ElevatedButton(
                 onPressed: () async{
                   if(_formkey.currentState.validate()) {
                     dynamic result = await _auth.signIn(email, pass);
@@ -82,7 +82,9 @@ class _SignInState extends State<SignIn> {
                     }
                   }
                 },
-                color: Color.fromRGBO(154, 178, 245, 1),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(Color.fromRGBO(154, 178, 245, 1))
+                ),
                 child: Text(
                   'Sign In', 
                   style: TextStyle(

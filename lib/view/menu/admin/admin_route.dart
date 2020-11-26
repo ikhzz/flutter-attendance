@@ -8,6 +8,7 @@ class AdminRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      initialRoute: '/history',
       routes: {
         '/': (context) => AdminMenu(),
         '/register': (context) => Register(),
