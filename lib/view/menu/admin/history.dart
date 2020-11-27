@@ -28,7 +28,8 @@ class _HistoryState extends State<History> {
               //snapshot.data.entries.forEach((e) => list.add(e.key));
               
               //return Text(snapshot.data.keys.single.toString());
-              return Text(snapshot.data.toString());
+              var a = snapshot.data;
+              return Text(a.toString());
               //return getw();
             }
             
@@ -42,8 +43,9 @@ class _HistoryState extends State<History> {
   Widget getw() {
     List<String> list2 = ['a','b','c','d','e'];
     List<Widget> list = List<Widget>();
-    for(var i = 0; i < 5; i++){
+    for(var i = 0; i < list2.length; i++){
         list.add(Text(list2[i]));
+        // add flexible-Firebase animated list, query from = ?
     }
     return Column(children: list);
   }

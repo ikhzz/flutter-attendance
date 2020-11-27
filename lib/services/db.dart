@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:ntp/ntp.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -48,20 +49,26 @@ class DbService {
   }
 
   Future history() async {
-    List list;
+    List list = [];
+    List list2 = [];
+    List list3 = [];
+    // var a = await _db.reference()
+    //   .child('presence')
+    //   .once()
+    //   .then((value) => value);
+    //Map b = jsonDecode(a.value); 
     var a = await _db.reference()
       .child('presence')
-      .once()
-      .then((value) => value);
-    //Map b = jsonDecode(a.value); 
-
-    print(a.toString());
-    // for(var i in a.value){
-    //   list.add(i);
-    // }
-    var b = a.value.keys.toList();
-    var c = a.value.values.toList();
-    var d = c[0].values.toList();
-    return b;
+      .orderByValue()
+      .onChildAdded
+      .listen((event) {
+        event.snapshot.key;
+        list.add(event.snapshot.key);
+        
+      });
+      list2.forEach((element) { });
+    
+    var b =[['tgl',['pagi','siang','sore']], ['tgl',['pagi','siang','sore']],['tgl',['pagi', 'siang' ,'sore']] ];
+    return list;
   }
 }
