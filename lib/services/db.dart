@@ -49,26 +49,20 @@ class DbService {
   }
 
   Future history() async {
-    List list = [];
-    List list2 = [];
-    List list3 = [];
-    // var a = await _db.reference()
-    //   .child('presence')
-    //   .once()
-    //   .then((value) => value);
-    //Map b = jsonDecode(a.value); 
-    var a = await _db.reference()
+    // prepare list
+    List listdate = [];
+    List listdatepart = [];
+
+    // wait until all date is added to list
+    // could try Firebaselist
+    await _db.reference()
       .child('presence')
       .orderByValue()
       .onChildAdded
       .listen((event) {
-        event.snapshot.key;
-        list.add(event.snapshot.key);
-        
+        listdate.add(event.snapshot.key);
+        listdatepart.add(event.snapshot.value.keys.toList());
       });
-      list2.forEach((element) { });
-    
-    var b =[['tgl',['pagi','siang','sore']], ['tgl',['pagi','siang','sore']],['tgl',['pagi', 'siang' ,'sore']] ];
-    return list;
+    return [listdate,listdatepart];
   }
 }

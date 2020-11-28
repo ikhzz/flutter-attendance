@@ -11,7 +11,7 @@ class History extends StatefulWidget {
 class _HistoryState extends State<History> {
 
   final DbService _db = DbService();
-  final DatabaseReference _dbs = FirebaseDatabase.instance.reference().child('presence');
+  final FirebaseDatabase _dbs = FirebaseDatabase.instance;
   
   @override
   Widget build(BuildContext context) {
@@ -24,29 +24,64 @@ class _HistoryState extends State<History> {
           future: _db.history(),
           builder: (context, snapshot){
             if(snapshot.connectionState == ConnectionState.done){
-              //List list = snapshot.data.keys.toList();
-              //snapshot.data.entries.forEach((e) => list.add(e.key));
-              
-              //return Text(snapshot.data.keys.single.toString());
-              var a = snapshot.data;
-              return Text(a.toString());
-              //return getw();
+              List list = [];
+              dynamic result = snapshot.data;
+              result[0].asMap().forEach((i,e){list.add([e,result[1][i]]);});
+              return getw(list);
             }
-            
-            return Text('tess');
+            return Text('Mengambil Data');
           },
         ),
       ),
     );
   }
 
-  Widget getw() {
-    List<String> list2 = ['a','b','c','d','e'];
-    List<Widget> list = List<Widget>();
-    for(var i = 0; i < list2.length; i++){
-        list.add(Text(list2[i]));
-        // add flexible-Firebase animated list, query from = ?
+  Widget getw(List list) {
+    List<Widget> result = List<Widget>();
+
+    // loop from list total, 
+    for(var i = 0; i < list.length; i++){
+        // loop from inner list index 2
+        for(var j=0; j < list[i][1].length; j++ ){
+          // add flexible-Firebase animated list, query from list
+          result.add(
+            Flexible(
+              child: FirebaseAnimatedList(
+                query: _dbs.reference().child('presence/${list[i][0]}/${list[i][1][j]}'),
+                itemBuilder: (context, snapshot, animation, index) {
+                  // add future builder if need image proof
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          // FutureBuilder for image
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tanggal: ${list[i][0]}'),
+                              Text('Bagian: ${list[i][1][j]}')
+                            ]
+                          ),
+                          SizedBox(width: 10.0,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Nama: ${snapshot.value['name']}'),
+                              Text('Waktu: ${snapshot.value['time']}')
+                            ]
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                  //Text('${snapshot.value['name']}');
+                },
+              ),
+            ),
+          );
+        }
     }
-    return Column(children: list);
+    return Column(children: result);
   }
 }
