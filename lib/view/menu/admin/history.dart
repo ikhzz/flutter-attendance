@@ -1,7 +1,5 @@
 import 'package:attendance_app2/services/db.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 class History extends StatefulWidget {
   @override
@@ -11,7 +9,6 @@ class History extends StatefulWidget {
 class _HistoryState extends State<History> {
 
   final DbService _db = DbService();
-  final FirebaseDatabase _dbs = FirebaseDatabase.instance;
   
   @override
   Widget build(BuildContext context) {
@@ -43,45 +40,33 @@ class _HistoryState extends State<History> {
     for(var i = 0; i < list.length; i++){
         // loop from inner list index 2
         for(var j=0; j < list[i][1].length; j++ ){
-          // add flexible-Firebase animated list, query from list
+          // add Gesture Detector
           result.add(
-            Flexible(
-              child: FirebaseAnimatedList(
-                query: _dbs.reference().child('presence/${list[i][0]}/${list[i][1][j]}'),
-                itemBuilder: (context, snapshot, animation, index) {
-                  // add future builder if need image proof
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          // FutureBuilder for image
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Tanggal: ${list[i][0]}'),
-                              Text('Bagian: ${list[i][1][j]}')
-                            ]
-                          ),
-                          SizedBox(width: 10.0,),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Nama: ${snapshot.value['name']}'),
-                              Text('Waktu: ${snapshot.value['time']}')
-                            ]
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                  //Text('${snapshot.value['name']}');
+            Container(
+              width: 500,
+              child: GestureDetector(
+                onTap: (){
+                  Navigator.pushNamed(context, '/detail', arguments: [list[i][0], list[i][1][j]]);
                 },
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text('Tanggal: ${list[i][0]}'),
+                        SizedBox(height: 10.0,),
+                        Text('Bagian: ${list[i][1][j]}')
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           );
         }
     }
-    return Column(children: result);
+    return Column(children: result,);
   }
 }

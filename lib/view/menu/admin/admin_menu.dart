@@ -5,6 +5,7 @@ import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance_app2/services/auth.dart';
 import 'package:ntp/ntp.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AdminMenu extends StatefulWidget {
   @override
@@ -18,16 +19,20 @@ class _AdminMenuState extends State<AdminMenu> {
   final DbService _db = DbService();
   final StorageService _storage = StorageService();
   final _scaffold = GlobalKey<ScaffoldState>();
+  final _picker = ImagePicker();
   
   String _date;
   String _time;
   String _dates;
-  String data;
+  String _image;
+  String _datanow;
   
-  void getTime() async {
+  void getInit() async {
     DateTime date = await NTP.now();
-    
+    String url = await _storage.getprofile();
+
     setState(() {
+      _image = url;
       String z = '0';
       String day = date.day.toString().length < 2 ? z+date.day.toString(): date.day.toString();
       String month = date.month.toString().length < 2 ? z+date.month.toString(): date.month.toString();
@@ -50,7 +55,7 @@ class _AdminMenuState extends State<AdminMenu> {
   @override
   void initState(){
     super.initState();
-    getTime();
+    getInit();
   }
 
   @override
@@ -70,17 +75,16 @@ class _AdminMenuState extends State<AdminMenu> {
                 decoration: BoxDecoration(
                   color: Colors.blue,
                 ),
-                child: FutureBuilder(
-                  future: _storage.getprofile(),
-                  builder: (context, snapshot) {
-                    if(snapshot.data != null) {
-                      return CircleAvatar(
-                        backgroundImage: NetworkImage(snapshot.data),
-                      );
-                    }
-                    return CircleAvatar();
-                  },
-                ),
+                child: _image == null ? GestureDetector(
+                  onTap: ()async{await setImage();},
+                  child: CircleAvatar()
+                  ) 
+                  : GestureDetector(
+                    onTap: ()async{await setImage();},
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(_image)
+                    ),
+                  ),
               ),
               ListTile(
                 leading: Icon(Icons.contact_page),
@@ -95,6 +99,7 @@ class _AdminMenuState extends State<AdminMenu> {
                 leading: Icon(Icons.lock_open),
                 title: Text('Lupa Password'),
                 onTap: (){
+                  Navigator.of(context).pop();
                   Navigator.pushNamed(context, '/resetpass');
                 },
               ),
@@ -102,6 +107,7 @@ class _AdminMenuState extends State<AdminMenu> {
                 leading: Icon(Icons.analytics),
                 title: Text('History Absen'),
                 onTap: (){
+                  Navigator.of(context).pop();
                   Navigator.pushNamed(context, '/history');
                 },
               ),
@@ -135,23 +141,48 @@ class _AdminMenuState extends State<AdminMenu> {
             SizedBox(height: 20.0),
             Text(_dates ?? 'Bukan Jam Absen'),
             SizedBox(height: 20.0),
-            FutureBuilder(
+            _datanow == null ? Text('Null') : Text('Not Null')
+          ],
+        ),
+      ),
+    );
+  }
+
+  void nyam(String msg){
+    _scaffold.currentState.showSnackBar(SnackBar(content:Text(msg)));
+  }
+
+  Future setImage() async{
+    PickedFile file = await _picker.getImage(source: ImageSource.gallery);
+    String url = await _storage.sendAvatar(file.path);
+    if(url != null){
+      setState(() {
+        _image = url;
+        return nyam('Foto Profil Telah Dirubah');
+      });
+    }else {
+      return nyam('Foto Profil Gagal Dirubah');
+    }
+  }
+
+  Widget firebase(){
+    FutureBuilder(
               future: _db.ref(),
               builder: (context,snapshot){
                 if(snapshot.data != null){
                   return Flexible(
                     child: FirebaseAnimatedList(
                       query: snapshot.data,
-                      itemBuilder: (context, snapshot, animation, index){
+                      itemBuilder: (context, snapshots, animation, index){
                         return Card(
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Row(
                               children: [
                                 FutureBuilder(
-                                  future: _storage.getImage('09-11-2020', 'Siang', snapshot.key),
-                                  builder: (context, snapshot) {
-                                    if(snapshot.data != null){
+                                  future: _storage.getImage('09-11-2020', 'Siang', snapshots.key),
+                                  builder: (context, snapshotss) {
+                                    if(snapshotss.data != null){
                                       return ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: GestureDetector(
@@ -176,9 +207,9 @@ class _AdminMenuState extends State<AdminMenu> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Nama            : ${snapshot.value['name']}'),
+                                    Text('Nama            : ${snapshots.value['name']}'),
                                     SizedBox(height:15.0),
-                                    Text('Jam Absen   : ${snapshot.value['time']}'),
+                                    Text('Jam Absen   : ${snapshots.value['time']}'),
                                   ],
                                 ),
                               ],
@@ -191,15 +222,6 @@ class _AdminMenuState extends State<AdminMenu> {
                 }
                 return Text('Menggambil Data');
               },
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  void nyam(String msg){
-    
-    _scaffold.currentState.showSnackBar(SnackBar(content:Text(msg)));
+            );
   }
 }

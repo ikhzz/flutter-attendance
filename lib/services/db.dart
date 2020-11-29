@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:ntp/ntp.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -55,7 +52,7 @@ class DbService {
 
     // wait until all date is added to list
     // could try Firebaselist
-    await _db.reference()
+    _db.reference()
       .child('presence')
       .orderByValue()
       .onChildAdded
@@ -64,5 +61,10 @@ class DbService {
         listdatepart.add(event.snapshot.value.keys.toList());
       });
     return [listdate,listdatepart];
+  }
+
+  Future dataNow()async{
+    List list = await getTime();
+    return await _db.reference().child('').once().then((value) => value.value);
   }
 }
