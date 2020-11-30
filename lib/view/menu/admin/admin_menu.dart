@@ -4,7 +4,6 @@ import 'package:attendance_app2/view/other/preview.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance_app2/services/auth.dart';
-import 'package:ntp/ntp.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AdminMenu extends StatefulWidget {
@@ -14,7 +13,6 @@ class AdminMenu extends StatefulWidget {
 
 class _AdminMenuState extends State<AdminMenu> {
 
-  
   final AuthService _auth = AuthService();
   final DbService _db = DbService();
   final StorageService _storage = StorageService();
@@ -24,32 +22,24 @@ class _AdminMenuState extends State<AdminMenu> {
   String _date;
   String _time;
   String _dates;
-  String _image;
-  String _datanow;
+  dynamic _image;
+  dynamic _datanow;
   
   void getInit() async {
-    DateTime date = await NTP.now();
-    String url = await _storage.getprofile();
+    // get current time
+    List date = await _db.getTime();
+    // get profil
+    dynamic url = await _storage.getprofile();
+    // check if data exist in current time
+    dynamic now = await _db.dataNow();
 
     setState(() {
+      _datanow = now;
       _image = url;
-      String z = '0';
-      String day = date.day.toString().length < 2 ? z+date.day.toString(): date.day.toString();
-      String month = date.month.toString().length < 2 ? z+date.month.toString(): date.month.toString();
-      String hour = date.hour.toString().length < 2 ? z+date.hour.toString(): date.hour.toString();
-      String minute = date.minute.toString().length < 2 ? z+date.minute.toString(): date.minute.toString();
-      
-      _date = '$day-$month-${date.year}';
-      _time = '$hour:$minute';
-      if(date.hour > 5 && date.hour < 11 ){
-        _dates = 'Pagi';
-      } else if(date.hour > 10 && date.hour < 14){
-        _dates  = 'Siang';
-      } else if(date.hour > 13 && date.hour < 19){
-        _dates = 'Sore';
-      }
+      _date = date[0];
+      _time = date[1];
+      _dates = date[2];
     });
-    
   }
 
   @override
@@ -63,7 +53,7 @@ class _AdminMenuState extends State<AdminMenu> {
     return Scaffold(
       key: _scaffold,
       appBar: AppBar(
-        title: Text('Admin Menu'),
+        title: Text('Menu Admin'),
       ),
       drawer: Container(
         width: 220.0,
@@ -81,8 +71,8 @@ class _AdminMenuState extends State<AdminMenu> {
                   ) 
                   : GestureDetector(
                     onTap: ()async{await setImage();},
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(_image)
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(_image)
                     ),
                   ),
               ),
@@ -141,7 +131,8 @@ class _AdminMenuState extends State<AdminMenu> {
             SizedBox(height: 20.0),
             Text(_dates ?? 'Bukan Jam Absen'),
             SizedBox(height: 20.0),
-            _datanow == null ? Text('Null') : Text('Not Null')
+            _datanow == null ? Text('Belum Ada Data Hari ini') 
+            : firebase()
           ],
         ),
       ),
@@ -166,62 +157,62 @@ class _AdminMenuState extends State<AdminMenu> {
   }
 
   Widget firebase(){
-    FutureBuilder(
-              future: _db.ref(),
-              builder: (context,snapshot){
-                if(snapshot.data != null){
-                  return Flexible(
-                    child: FirebaseAnimatedList(
-                      query: snapshot.data,
-                      itemBuilder: (context, snapshots, animation, index){
-                        return Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                FutureBuilder(
-                                  future: _storage.getImage('09-11-2020', 'Siang', snapshots.key),
-                                  builder: (context, snapshotss) {
-                                    if(snapshotss.data != null){
-                                      return ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: GestureDetector(
-                                          onTap: (){
-                                            Navigator.push(context, MaterialPageRoute(builder: (_){
-                                              return Preview(data: snapshot.data);
-                                            }));
-                                          },
-                                            child: Image(
-                                              image: NetworkImage(snapshot.data),
-                                              height: 100.0,
-                                            ),
-                                        ),
-                                      );
-                                    }
-                                    return CircleAvatar(
-                                      radius: 40.0,
-                                    );
+    return FutureBuilder(
+      future: _db.ref(),
+      builder: (context,snapshot){
+        if(snapshot.data != null){
+          return Flexible(
+            child: FirebaseAnimatedList(
+              query: snapshot.data,
+              itemBuilder: (context, snapshots, animation, index){
+                return Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        FutureBuilder(
+                          future: _storage.getImage('09-11-2020', 'Siang', snapshots.key),
+                          builder: (context, snapshotss) {
+                            if(snapshotss.data != null){
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(context, MaterialPageRoute(builder: (_){
+                                      return Preview(data: snapshot.data);
+                                    }));
                                   },
+                                    child: Image(
+                                      image: NetworkImage(snapshot.data),
+                                      height: 100.0,
+                                    ),
                                 ),
-                                SizedBox(width: 20.0),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Nama            : ${snapshots.value['name']}'),
-                                    SizedBox(height:15.0),
-                                    Text('Jam Absen   : ${snapshots.value['time']}'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ) 
-                        );
-                      },
+                              );
+                            }
+                            return CircleAvatar(
+                              radius: 40.0,
+                            );
+                          },
+                        ),
+                        SizedBox(width: 20.0),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Nama            : ${snapshots.value['name']}'),
+                            SizedBox(height:15.0),
+                            Text('Jam Absen   : ${snapshots.value['time']}'),
+                          ],
+                        ),
+                      ],
                     ),
-                  );
-                }
-                return Text('Menggambil Data');
+                  ) 
+                );
               },
-            );
+            ),
+          );
+        }
+        return Text('Menggambil Data');
+      },
+    );
   }
 }

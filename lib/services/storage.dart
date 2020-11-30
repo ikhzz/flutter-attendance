@@ -9,9 +9,17 @@ class StorageService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
   // Get Profile Picture
-  Future<String> getprofile() async{
-     String url = await _storage.ref('images').child('profile/${_auth.currentUser.uid}').getDownloadURL();
-     return url;
+  Future<dynamic> getprofile() async{
+     try{
+       dynamic url = await _storage.ref('images').child('profile/${_auth.currentUser.uid}').getDownloadURL();
+       if(url == null){
+         return null;
+       }else {
+         return url;
+       }
+     }catch(e){
+       return null;
+     }
   }
 
   // GetImage
