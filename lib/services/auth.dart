@@ -1,16 +1,14 @@
 import 'package:attendance_app2/services/db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:attendance_app2/models/user.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class AuthService {
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseDatabase db = FirebaseDatabase.instance;
-  
-  
-  
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
+
   // Extract uid
   AppUser _uidUser(User user) {
     return user != null ? AppUser(uid: user.uid) : null;
@@ -57,13 +55,13 @@ class AuthService {
             .map((User user) => _uidUser(user));
   }
 
-  // Reset Pass
-  Future<bool> reset(String pass) async {
-    try{
-      //_auth.
-      return true;
-    } catch(e) {
-      return false;
-    }
+  // Reset Pass need verified email
+
+  // Get User Detail
+  Future getDetail()async{
+    String level = await _db.reference().child('profile/${_auth.currentUser.uid}/level').once().then((value) => value.value);
+    String userName = await _db.reference().child('profile/${_auth.currentUser.uid}/name').once().then((value) => value.value);
+    String email = _auth.currentUser.email;
+    return [level, userName, email];
   }
 }

@@ -1,28 +1,32 @@
+import 'dart:io';
+
+import 'package:attendance_app2/services/auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:ntp/ntp.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 
 class DbService {
 
   final FirebaseDatabase _db = FirebaseDatabase.instance;
-
-  // Get Level 
-  Future level(String uid) async {
-    return await _db.reference()
-    .child('profile/$uid/level')
-    .once()
-    .then((snapshot) => snapshot.value);
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthService _service = AuthService();
 
   // Get Query
-  Future<Query> ref() async {
+  Future<List<dynamic>> ref() async {
     List list = await getTime();
-    Query ref = _db.reference().child('presence/${list[0]}/Siang');
-    return ref;
+    Query ref = _db.reference().child('presence/${list[0]}/${list[2]}');
+    return [ref, list[0], list[2]];
   }
 
   // Get Time Now
   Future<List<dynamic>> getTime() async {
+    // Get date online
     DateTime date = await NTP.now();
+
+    // Build date string
     String z = '0';
     String days;
     String day = date.day.toString().length < 2 ? z+date.day.toString(): date.day.toString();
@@ -35,9 +39,9 @@ class DbService {
 
     if(date.hour > 5 && date.hour < 11 ){
         days = 'Pagi';
-      } else if(date.hour > 10 && date.hour < 14){
+    } else if(date.hour > 10 && date.hour < 14){
         days  = 'Siang';
-      } else if(date.hour > 13 && date.hour < 19){
+    } else if(date.hour > 13 && date.hour < 19){
         days = 'Sore';
     }
     
@@ -83,6 +87,60 @@ class DbService {
       }
     } catch(e){
       return null;
+    }
+  }
+
+  Future checkPos() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    List date = await getTime();
+    
+    // Check date
+    if(date[2] == null){
+      return 'Bukan jam absen';
+    } else {
+      if(permission == LocationPermission.always || permission == LocationPermission.whileInUse){
+        // Get position
+        Position pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+        // Coordination
+        List poslat = [-0.9018800, -0.9015434];
+        List poslong = [119.8861482, 119.8867071];
+        // Check location latitude & longitude
+        if(pos.latitude > poslat[0]  && pos.latitude < poslat[1] && pos.longitude <  poslong[1] && pos.longitude > poslong[0]){
+          var a = await ImagePicker().getImage(source: ImageSource.camera);
+          if(a == null){
+            return 'Gagal mengambil gambar';
+          } else {
+            var result = await sendData(a.path, date[0], date[1], date[2]);
+            if(result == false){
+              return 'Absen Gagal dikirim';
+            } else {
+              return 'Absen telah dikirim';
+            }
+          }
+        } else{
+          return 'Tidak di area absen';
+        }
+      } else if(permission == LocationPermission.denied){
+        await Geolocator.requestPermission();
+      } else{
+        return 'Permisi Lokasi Ditolak';
+      }
+    }
+  }
+
+  Future sendData(String path, String date, String time, String day)async{
+    FirebaseStorage _storage = FirebaseStorage.instance;
+    File file = File(path);
+    List list = await _service.getDetail();
+    try{
+      await _storage.ref('presence').child('$date/$day/${_auth.currentUser.uid}').putFile(file);
+      await _db.reference().child('presence/$date/$day/${_auth.currentUser.uid}').set({
+        'name' : list[1],
+        'time' : time,
+      });
+      return true;
+    } catch(e){
+      return false;
     }
   }
 }
