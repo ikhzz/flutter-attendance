@@ -17,14 +17,13 @@ class _AdminMenuState extends State<AdminMenu> {
   final _scaffold = GlobalKey<ScaffoldState>();
   
   String _date;
-  String _time;
   String _dates;
   dynamic _image;
   dynamic _datanow;
   
   void getInit() async {
-    // get current time
-    List date = await _db.getTime();
+    // For admin just use dates and part of the day
+    List<dynamic> date = await _db.getTime();
     // get profil
     dynamic url = await _storage.getprofile();
     // check if data exist in current time
@@ -33,16 +32,17 @@ class _AdminMenuState extends State<AdminMenu> {
     setState(() {
       _datanow = now;
       _image = url;
-      _date = date[0];
-      _time = date[1];
-      _dates = date[2];
+      _date = "Tanggal: ${date[0]}";
+      _dates = "Bagian Absen: ${date[2]}";
     });
   }
+  
 
   @override
   void initState(){
     super.initState();
     getInit();
+    print("init state run");
   }
 
   @override
@@ -131,19 +131,15 @@ class _AdminMenuState extends State<AdminMenu> {
         //alignment: Alignment.center,
         child: Column(
           children: [
-            SizedBox(height: 5.0),
-            Text('Admin Menu'),
             SizedBox(height: 20.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(_time ?? 'Jam'),
+                Text(_dates ?? 'Bukan Jam Absen'),
                 SizedBox(width: 40.0),
-                Text(_date ?? 'Tanggal'),
+                Text(_date ?? 'Menunggu tanggal'),
               ],
             ),
-            SizedBox(height: 20.0),
-            Text(_dates ?? 'Bukan Jam Absen'),
             SizedBox(height: 20.0),
             _datanow == null ? Text('Belum Ada Data Hari ini') 
             : PresentFirebase()

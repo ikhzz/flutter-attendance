@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:async';
 import 'package:attendance_app2/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -101,11 +101,14 @@ class DbService {
       if(permission == LocationPermission.always || permission == LocationPermission.whileInUse){
         // Get position
         Position pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
-        // Coordination
+        // Coordinate
         List poslat = [-0.9018800, -0.9015434];
         List poslong = [119.8861482, 119.8867071];
+        // Testing coordinate
+        List testPoslat = [-0.9025771, -0.9021997];
+        List testPoslong = [119.8712618, 119.8716238];
         // Check location latitude & longitude
-        if(pos.latitude > poslat[0]  && pos.latitude < poslat[1] && pos.longitude <  poslong[1] && pos.longitude > poslong[0]){
+        if(pos.latitude > testPoslat[0]  && pos.latitude < testPoslat[1] && pos.longitude <  testPoslong[1] && pos.longitude > testPoslong[0]){
           var a = await ImagePicker().getImage(source: ImageSource.camera);
           if(a == null){
             return 'Gagal mengambil gambar';

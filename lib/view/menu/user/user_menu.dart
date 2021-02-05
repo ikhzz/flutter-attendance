@@ -2,6 +2,7 @@ import 'package:attendance_app2/services/auth.dart';
 import 'package:attendance_app2/services/db.dart';
 import 'package:attendance_app2/services/storage.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class UserMenu extends StatefulWidget {
   @override
@@ -23,14 +24,21 @@ class _UserMenuState extends State<UserMenu> {
   dynamic _image;
 
   void getInit()async{
-    List date = await _db.getTime();
+    List initialDate = await _db.getTime();
     List name = await _auth.getDetail();
     dynamic url = await _storage.getprofile();
-
+    Timer.periodic(Duration(minutes: 1), (timer) async { 
+      List updateDate = await _db.getTime();
+      setState(() {
+        _date = updateDate[0];
+        _time = updateDate[1];
+        _dates = updateDate[2];
+      });
+    });
     setState(() {
-      _date = date[0];
-      _time = date[1];
-      _dates = date[2];
+      _date = initialDate[0];
+      _time = initialDate[1];
+      _dates = initialDate[2];
       _username = name[1];
       _email = name[2];
       _image = url;
@@ -84,24 +92,23 @@ class _UserMenuState extends State<UserMenu> {
         ],
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          SizedBox(height: 10.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Jam: ${_time ?? 'Menunggu waktu'}'),
+              SizedBox(width: 20.0),
+              Text('Tanggal: ${_date ?? 'Menunggu tanggal'}'),
+            ]
+          ),
           SizedBox(height: 10.0),
           Text('Nama : ${_username ?? 'name'}'),
           SizedBox(height: 10.0),
           Text('Email : ${_email ?? 'email'}'),
           SizedBox(height: 10.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_time ?? 'Jam'),
-              SizedBox(width: 40.0),
-              Text(_date ?? 'Tanggal'),
-            ]
-          ),
-          SizedBox(height: 10.0),
           Text('Bagian Absen: ${_dates ?? 'Bukan Bagian Absen'}'),
-          SizedBox(height: 50.0,),
+          SizedBox(height: 400.0,),
           ElevatedButton(
             onPressed: ()async{
               var result = await _db.checkPos();
